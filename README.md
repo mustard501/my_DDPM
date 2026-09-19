@@ -101,16 +101,48 @@ python train.py --eval_fid --ckpt runs/ddpm_cifar/ckpt.pt --n_fid 50000
 | `--fid_every` | 20000 | FID every N steps (`0` = disable) |
 | `--n_fid` | 10000 | Images for FID (paper: 50000) |
 
+## Dataset
+
+| Item | This repo | Paper |
+|------|-----------|-------|
+| Dataset | [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) | CIFAR-10 |
+| Task | Unconditional generation | Unconditional generation |
+| Training data | 50,000 train images | 50,000 train images |
+| Resolution | 32×32 RGB | 32×32 RGB |
+| Preprocessing | Scale to **[-1, 1]** (`Normalize(0.5)`) | Scale to [-1, 1] |
+| Augmentation | Random horizontal flip | Random horizontal flip |
+| FID reference set | CIFAR-10 **train** split (50k) | CIFAR-10 **train** split (50k) |
+
+## Results
+
+FID evaluated with **50,000 generated samples** vs the CIFAR-10 training set (Inception-v3, 2048-dim; same protocol as the paper). EMA weights used for sampling.
+
+| Metric | This repo | Paper (L_simple) |
+|--------|-----------|------------------|
+| **FID ↓** | **17.54** | **3.17** |
+| Inception Score | not evaluated | 9.46 |
+| NLL (bits/dim) | not evaluated | ≤ 3.75 |
+
+The gap is expected: this run uses a smaller U-Net and fewer training steps (see below). The pipeline (train → sample → FID) is verified end-to-end.
+
 ## vs. Original Paper
 
-This repo implements the core DDPM recipe (ε-prediction + L_simple + EMA) but uses a **smaller U-Net** for faster iteration:
+Core algorithm matches the paper (ε-prediction, L_simple, linear β schedule, EMA sampling). **Intentionally simplified** for learning and limited compute:
 
-| | This repo | Paper (CIFAR-10) |
-|--|-----------|------------------|
-| Params | ~3.6M (`dim=64`) | ~35.7M (`dim=128`) |
-| ResBlocks / level | 1 | 2 |
+| Item | This repo | Paper (CIFAR-10) |
+|------|-----------|------------------|
+| U-Net params | ~3.6M (`dim=64`) | ~35.7M (`dim=128`) |
+| ResBlocks per level | 1 | 2 |
+| Self-attention | 16×16 (+ 4×4 bottleneck) | 16×16 |
 | Training steps | 200k (default) | 800k |
-| Target FID | — | 3.17 |
+| Batch size | 128 | 128 |
+| Optimizer / LR | Adam, 2×10⁻⁴ | Adam, 2×10⁻⁴ |
+| EMA decay | 0.9999 | 0.9999 |
+| Dropout | 0.1 | 0.1 |
+| Diffusion steps T | 1000 | 1000 |
+| Sampling σ² | β_t (default) | β_t or β̃_t (similar) |
+| L₀ discrete decoder | not implemented | yes |
+| Weighted variational bound L | not implemented (L_simple only) | ablated in paper |
 
 See `docs/DDPM-note.html` for a detailed paper walkthrough.
 
