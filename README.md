@@ -119,7 +119,7 @@ FID evaluated with **50,000 generated samples** vs the CIFAR-10 training set (In
 
 | Metric | This repo | Paper (L_simple) |
 |--------|-----------|------------------|
-| **FID ↓** | **17.54** | **3.17** |
+| **FID ↓** | **15.84** | **3.17** |
 | Inception Score | not evaluated | 9.46 |
 | NLL (bits/dim) | not evaluated | ≤ 3.75 |
 
